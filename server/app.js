@@ -50,7 +50,111 @@ mongoose
   .then((x) => console.log(`Connected to the database "${x.connections[0].name}"`))
   .catch((err) => console.error("Error connecting to MongoDB", err));
 
+app.post("/api/cohorts", async (req, res) => {
+  try {
+    const newCohort = await Cohort.create(req.body);
+    res.status(201).json(newCohort);
+  } catch (error) {
+    res.status(500).json({ message: "Error to create cohort", error });
+  }
+});
+app.get("/api/cohorts", async (req, res) => {
+  try {
+    const cohorts = await Cohort.find();
+    res.status(200).json(cohorts);
+  } catch (error) {
+    res.status(500).json({ message: "Error to obtain cohort", error });
+  }
+});
+app.get("/api/cohorts/:cohortId", async (req, res) => {
+  try {
+    const cohort = await Cohort.findById(req.params.cohortId);
+    if (!cohort) {
+      return res.status(404).json({ message: "Cohort not found" });
+    }
+    res.status(200).json(cohort);
+  } catch (error) {
+    res.status(500).json({ message: "Error to obtain cohort", error });
+  }
+});
+app.put("/api/cohorts/:cohortId", async (req, res) => {
+  try {
+    const updatedCohort = await Cohort.findByIdAndUpdate(
+      req.params.cohortId,
+      req.body,
+      { new: true } 
+    );
+    res.status(200).json(updatedCohort);
+  } catch (error) {
+    res.status(500).json({ message: "Error on updating cohort", error });
+  }
+});
+app.delete("/api/cohorts/:cohortId", async (req, res) => {
+  try {
+    await Cohort.findByIdAndDelete(req.params.cohortId);
+    res.status(200).json({ message: "Success on deleting cohort" });
+  } catch (error) {
+    res.status(500).json({ message: "Error on deleting cohort", error });
+  }
+});
 
+app.post("/api/students", async (req, res) => {
+  try {
+    const newStudent = await Student.create(req.body);
+    res.status(201).json(newStudent);
+  } catch (error) {
+    res.status(500).json({ message: "Error on creating student", error });
+  }
+});
+app.put("/api/students/:studentId", async (req, res) => {
+  try {
+    const updatedStudent = await Student.findByIdAndUpdate(
+      req.params.studentId,
+      req.body,
+      { new: true }
+    );
+    res.status(200).json(updatedStudent);
+  } catch (error) {
+    res.status(500).json({ message: "Error on updating student", error });
+  }
+});
+app.delete("/api/students/:studentId", async (req, res) => {
+  try {
+    await Student.findByIdAndDelete(req.params.studentId);
+    res.status(200).json({ message: "Success on deleting student" });
+  } catch (error) {
+    res.status(500).json({ message: "Error on deleting studient", error });
+  }
+});
+app.get("/api/students", async (req, res) => {
+  try {
+    const students = await Student.find().populate("cohort");
+    res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: "Error to obtain studients", error });
+  }
+});
+app.get("/api/students/:studentId", async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.studentId).populate("cohort");
+    if (!student) {
+      return res.status(404).json({ message: "Studient not found" });
+    }
+    res.status(200).json(student);
+  } catch (error) {
+    res.status(500).json({ message: "Error to obtain studient", error });
+  }
+});
+app.get("/api/students/cohort/:cohortId", async (req, res) => {
+  try {
+    const { cohortId } = req.params;
+    const studentsInCohort = await Student.find({ cohort: cohortId }).populate("cohort");
+    
+    res.status(200).json(studentsInCohort);
+  } catch (error) {
+    res.status(500).json({ message: "Error to obtain studients from cohort", error });
+  }
+});
 // START SERVER
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
